@@ -23,11 +23,12 @@ public class Main {
     private static final BigInteger g = new BigInteger("A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507FD6406CFF14266D31266FEA1E5C41564B777E690F5504F213160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28AD662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24855E6EEB22B3B2E5", 16);
 
     //private static final BigInteger a = new BigInteger("89384540494091085456630009856882");
-    private static final BigInteger a = new BigInteger("120");
+    private static final BigInteger a = new BigInteger("102");
 
 
     private static final BigInteger B = new BigInteger("5A0B1B5D5794404EADAE3BE9D3F72AF602FDB4F066C7B9AD39632FD581CDB4646759F25183209404D1241567F7F873F1A01FA40F33F285CF10375E923FD8C0A53FCB9C98058A5E0DF665C9D5A86058659C51F1CE7C4D68D1389110B9D7CD74DE0A2AB158F373A99F61923B6103AAA55966698417E38F5CE3B16B25404CEDCF10", 16);
 
+    // ! - aqui nao esta considerando que é case sensitive, isso ta provocando o erro de nao conseguir decifrar
     private static final byte[] msg = new BigInteger("580D66D68E6DF45E969CCAB880925DDE4C2D4E5706B38B38DA434035FE9A18BC53BD34964B094CA7C66CAC2B80FB8FF93A3BC8613261E660F9148B61F3A33EB893B3994E2EDC34EC1135CDBE108803B155CEA5662B97714089CCD9A9F4DC21E2", 16).toByteArray();
 
     private static MessageDigest md;
@@ -50,17 +51,19 @@ public class Main {
         // ? - PASSO 1
         // g ^ a mod p
         BigInteger A = g.modPow(a, p);
-        System.out.println("A: " + gerarHexDeByteArray(A.toByteArray()));
+        System.out.println("A certo: " + A.toString(16));
+        System.out.println("A zuado: " + gerarHexDeByteArray(A.toByteArray()));
 
         // ? - PASSO 2
         // g ^ a mod p
         BigInteger V = B.modPow(a, p);
+        V.toString(16);
         System.out.println("V: " + gerarHexDeByteArray(V.toByteArray()));
 
         // ? - PASSO 3
         //gero o S com SHA-256
         byte[] S = gerarHash(V.toByteArray());
-        System.out.println(S);
+        System.out.println("S: " +  gerarHexDeByteArray(S));
         //a senha é os primeiros 128 bits da hash = 16 bytes
         byte[] senha = Arrays.copyOfRange(S, 0, 16);
         System.out.println("senha: " + gerarHexDeByteArray(senha));
