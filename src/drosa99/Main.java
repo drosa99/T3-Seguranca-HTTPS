@@ -22,14 +22,14 @@ public class Main {
     private static final BigInteger p = new BigInteger("B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C69A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C013ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD7098488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708DF1FB2BC2E4A4371", 16);
     private static final BigInteger g = new BigInteger("A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507FD6406CFF14266D31266FEA1E5C41564B777E690F5504F213160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28AD662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24855E6EEB22B3B2E5", 16);
 
-    //private static final BigInteger a = new BigInteger("89384540494091085456630009856882");
-    private static final BigInteger a = new BigInteger("102");
+    private static final BigInteger a = new BigInteger("89384540494091085456630009856882");
+    //private static final BigInteger a = new BigInteger("102");
 
 
-    private static final BigInteger B = new BigInteger("5A0B1B5D5794404EADAE3BE9D3F72AF602FDB4F066C7B9AD39632FD581CDB4646759F25183209404D1241567F7F873F1A01FA40F33F285CF10375E923FD8C0A53FCB9C98058A5E0DF665C9D5A86058659C51F1CE7C4D68D1389110B9D7CD74DE0A2AB158F373A99F61923B6103AAA55966698417E38F5CE3B16B25404CEDCF10", 16);
+    private static final BigInteger B = new BigInteger("5E123A18DB70E53166FE8998C3D87C3D27366CC5B7959BF79416126EA4674B80FB4A48D8BCE072788F60E8848226E4E2DC2F980D5B845936212579E8CD8AC79369F1D7A78EA47306A238763768D560FCC98E45CB86B6F34F410AB393351EFC8E6EB86819ABCD20EF94132C87D129C862B5B34BD047E01FA8A6D3DEF7F7ADD1D0", 16);
 
     // ! - aqui nao esta considerando que é case sensitive, isso ta provocando o erro de nao conseguir decifrar
-    private static final byte[] msg = new BigInteger("580D66D68E6DF45E969CCAB880925DDE4C2D4E5706B38B38DA434035FE9A18BC53BD34964B094CA7C66CAC2B80FB8FF93A3BC8613261E660F9148B61F3A33EB893B3994E2EDC34EC1135CDBE108803B155CEA5662B97714089CCD9A9F4DC21E2", 16).toByteArray();
+    private static final byte[] msg = HexToString.hexStringToByteArray("16B82288CA1CEC745FA5511D56B4A40DB751EE2E3F585D03736589B49B3CCB699D88F28E1A01D55F3498B19128BC8B4F8857DFC6E865343DD0CC202F051BA8162405067BA7933B66DBC3FD1E7C5687DFF12932FB6B183424E543277F261F5F988CBDBCC471EFF29722D75AC955366270A81009E887B0C7EB315EBF4B659460AB");
 
     private static MessageDigest md;
 
@@ -43,8 +43,11 @@ public class Main {
 
     public static void main(String[] args) {
 
+        System.out.println("a: " + a);
+
         // ! - ETAPA 1
         System.out.println("p: " + p);
+        System.out.println("p hex: " + p.toString(16));
 
         System.out.println("g: " + g);
 
@@ -58,20 +61,21 @@ public class Main {
         // g ^ a mod p
         BigInteger V = B.modPow(a, p);
         V.toString(16);
-        System.out.println("V: " + gerarHexDeByteArray(V.toByteArray()));
+        //System.out.println("V: " + gerarHexDeByteArray(V.toByteArray()));
 
         // ? - PASSO 3
         //gero o S com SHA-256
-        byte[] S = gerarHash(V.toByteArray());
-        System.out.println("S: " +  gerarHexDeByteArray(S));
+        //byte[] S = gerarHash(V.toByteArray());
+        byte[] S = HexToString.hexStringToByteArray(V.toString(16));
+        //System.out.println("S: " +  gerarHexDeByteArray(S));
         //a senha é os primeiros 128 bits da hash = 16 bytes
         byte[] senha = Arrays.copyOfRange(S, 0, 16);
-        System.out.println("senha: " + gerarHexDeByteArray(senha));
+       // System.out.println("senha: " + gerarHexDeByteArray(senha));
 
 
         // ! - ETAPA 2
         byte[] iv = Arrays.copyOfRange(msg, 0, 16);
-        System.out.println("iv: " + gerarHexDeByteArray(iv));
+        //System.out.println("iv: " + gerarHexDeByteArray(iv));
         byte[] mensagem = Arrays.copyOfRange(msg, 16, msg.length);
         ByteBuffer buf = ByteBuffer.allocate(msg.length);
         buf.put(mensagem);
@@ -90,6 +94,17 @@ public class Main {
 
         }
         return sb.toString();
+    }
+
+    //https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 
     //metodo para gerar hash de um array de bytes utilizando a biblioteca MessageDigest
