@@ -35,6 +35,7 @@ public class Main {
     private static final BigInteger p = new BigInteger("B10B8F96A080E01DDE92DE5EAE5D54EC52C99FBCFB06A3C69A6A9DCA52D23B616073E28675A23D189838EF1E2EE652C013ECB4AEA906112324975C3CD49B83BFACCBDD7D90C4BD7098488E9C219A73724EFFD6FAE5644738FAA31A4FF55BCCC0A151AF5F0DC8B4BD45BF37DF365C1A65E68CFDA76D4DA708DF1FB2BC2E4A4371", 16);
     private static final BigInteger g = new BigInteger("A4D1CBD5C3FD34126765A442EFB99905F8104DD258AC507FD6406CFF14266D31266FEA1E5C41564B777E690F5504F213160217B4B01B886A5E91547F9E2749F4D7FBD7D3B9A92EE1909D0D2263F80A76A6A24C087A091F531DBF0A0169B6A28AD662A4D18E73AFA32D779D5918D08BC8858F4DCEF97C2A24855E6EEB22B3B2E5", 16);
 
+    //aqui esta o "a" escolhido
     private static final BigInteger a = new BigInteger("89384540494091085456630009856882");
 
 
@@ -57,30 +58,30 @@ public class Main {
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, UnsupportedEncodingException {
 
 
-        // ! - ETAPA 1
+        // - ETAPA 1
         System.out.println("a (hex): " + a.toString(16));
 
-        // ? - PASSO 1
+        // - PASSO 1
         // g ^ a mod p
         BigInteger A = g.modPow(a, p);
         System.out.println("A (hex): " + A.toString(16));
 
 
-        // ? - PASSO 2
+        // - PASSO 2
         // B ^ a mod p
         BigInteger V = B.modPow(a, p);
         System.out.println("V (hex): " + V.toString(16));
 
-        // ? - PASSO 3
+        // - PASSO 3
         //gero o S com SHA-256
         byte[] S = gerarHash(V.toByteArray());
-        //System.out.println("S: " +  gerarHexDeByteArray(S));
+
         //a senha é os primeiros 128 bits da hash = 16 bytes
         byte[] senha = Arrays.copyOfRange(S, 0, 16);
         System.out.println("senha: " + byteArrayToHexString(senha));
 
 
-        // ! - ETAPA 2
+        // - ETAPA 2
         //mensagem recebida pelo professor
         byte[] msg = hexStringToByteArray(MSG_RECEBIDA);
 
@@ -93,14 +94,15 @@ public class Main {
         System.out.println("Mensagem decifrada invertida: " + msgDecifradaRevertida);
 
         //criptografa a mensagem para devolver para o professor
-        String mensagemEnviada = criptografaMensagem(senha, msgDecifradaRevertida);
+        String mensagemEnviada = criptografa(senha, msgDecifradaRevertida);
         System.out.println("Mensagem enviada: " + mensagemEnviada);
 
         System.out.println("Ultima mensagem recebida: " + descriptografa(senha, hexStringToByteArray(ULTIMA_MSG_RECEBIDA)));
 
     }
 
-    private static String criptografaMensagem(byte[] senha, String msgDescriptografada) throws UnsupportedEncodingException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    //metodo que recebe a senha, e o conteudo da mensagem em texto claro, retorna String hexadecimal com a mensagem completa criptografada
+    private static String criptografa(byte[] senha, String msgDescriptografada) throws UnsupportedEncodingException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         //geracao do novo IV para mensagem que sera enviada
         byte[] ivGerado = gerarIVAleatorio();
         //faz a criptografia do conteudo da mensagem a ser enviada
@@ -117,13 +119,14 @@ public class Main {
         return byteArrayToHexString(mensagemCompleta);
     }
 
+    //metodo que recebe a senha, a mensagem completa recebida e retorna o conteudo da mensagem decifrada em texto claro
     private static String descriptografa(byte[] senha, byte[] msg) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         byte[] iv = new byte[16];
         byte[] mensagem;
         //aqui popula o iv com os primeiros 128 bits da mensagem recebida
         System.arraycopy(msg, 0, iv, 0, iv.length);
 
-        //aqui coloca o restante da mensagem, parte após o iv, no array mensagem, que contem o conteudo da msg recebida
+        //aqui coloca o restante da mensagem recebida, parte após o iv, no array mensagem, que contem o conteudo da msg recebida
         int size = msg.length - iv.length;
         mensagem = new byte[size];
         System.arraycopy(msg, iv.length, mensagem, 0, size);
@@ -135,6 +138,7 @@ public class Main {
         return new String(resultadoBytes, StandardCharsets.UTF_8);
     }
 
+    //metodo responsavel por gerar um IV aleatorio
     private static byte[] gerarIVAleatorio() throws UnsupportedEncodingException {
         SecureRandom secureRandom = new SecureRandom();
         byte[] initVectorBytes = new byte[IV_LENGTH / 2];
@@ -143,6 +147,7 @@ public class Main {
         return initVector.getBytes("UTF-8");
     }
 
+    //metodo que recebe uma string e retorna o conteudo dela invertido
     private static String inverteString(String msgDecifrada) {
         StringBuilder input = new StringBuilder(msgDecifrada);
         return input.reverse().toString();
@@ -177,6 +182,7 @@ public class Main {
     }
 
     //FONTE: https://makeinjava.com/encrypt-decrypt-message-using-aes-128-cbc-java-example/
+    //metodo que faz a criptografia ou decriptografia de uma mensagem, recebendo senha, IV e conteudo da mensagem utulizando AES-CBC-PKCS5Padding
     private static byte[] encryptDecrypt(final int mode, final byte[] senha, final byte[] IV, final byte[] message) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         SecretKeySpec keySpec = new SecretKeySpec(senha, "AES");
